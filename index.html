@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Catch the Ball Game</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: left; margin-left: 20px; }
+        /* Styling */
+        canvas { border: 1px solid black; background-color: #f0f0f0; }
+        .game-over { display: none; } /* Hides the "Game Over" message initially */
+        /* Styles for buttons */
+        .control-button {
+            font-size: 24px;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            background-color: #0095DD;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Catch the Ball Game</h1>
+    <!-- display -->
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+    <!-- player's score -->
+    <div id="score">Score: 0</div>
+    <!-- End of game -->
+    <div class="game-over" id="gameOver">
+        Game Over! 
+        <button class="control-button" id="restartButton">Restart</button>
+    </div>
+    <!-- Accessible movement -->
+    <div>
+        <button class="control-button" id="leftButton">Left</button>
+        <button class="control-button" id="rightButton">Right</button>
+    </div>
+
+    <script>
+        // get the canvas element
+        const canvas = document.getElementById('gameCanvas');
+        // get the "context" which is the tool used to draw on the canvas
+        const ctx = canvas.getContext('2d');
+
+        const basketWidth = 100;  // width 
+        const basketHeight = 20;  // the height of the basket
+        let basketX = (canvas.width - basketWidth) / 2; // Start the basket in the center at the bottom
+
+        // set up the ball dimensions and position
+        const ballRadius = 10; // the radius of the ball
+        let ballX = Math.random() * (canvas.width - 2 * ballRadius) + ballRadius; // Start the ball at a random horizontal position
+        let ballY = ballRadius; // start the ball at the top of the canvas
+        let ballSpeed = 2; // the speed at which the ball falls
+
+        //  keeps track of whether the player is pressing the arrow keys
+        let rightPressed = false;
+        let leftPressed = false;
+
+        // keeps track of the player's score
+        let score = 0;
+
+        // variable will become true when the game ends
+        let gameOver = false;
+
+        // event listeners to check if the player is pressing or releasing the arrow keys
+        document.addEventListener('keydown', keyDownHandler);
+        document.addEventListener('keyup', keyUpHandler);
+
+        // event listeners for the buttons
+        document.getElementById('leftButton').addEventListener('mousedown', () => leftPressed = true);
+        document.getElementById('leftButton').addEventListener('mouseup', () => leftPressed = false);
+        document.getElementById('rightButton').addEventListener('mousedown', () => rightPressed = true);
+        document.getElementById('rightButton').addEventListener('mouseup', () => rightPressed = false);
+
+        // event listener for the restart button
+        document.getElementById('restartButton').addEventListener('click', restartGame);
+
+        //  function is called when a key is pressed down
+        function keyDownHandler(e) {
+            if (e.key === 'Right' || e.key === 'ArrowRight') {
+                rightPressed = true; // if the right arrow key is pressed == move the basket to the right. use ||
+            } else if (e.key === 'Left' || e.key === 'ArrowLeft') {
+                leftPressed = true; // if the left arrow key is pressed == move the basket to the left . use ||
+            }
+        }
+
+        //  function is called when a key is released
+        function keyUpHandler(e) {
+            if (e.key === 'Right' || e.key === 'ArrowRight') {
+                rightPressed = false; // stop moving the basket to the right when the right arrow key is released
+            } else if (e.key === 'Left' || e.key === 'ArrowLeft') {
+                leftPressed = false; // stop moving the basket to the left when the left arrow key is released
+            }
+        }
+
+        //  function draws the basket on the canvas
+        function drawBasket() {
+            ctx.beginPath(); //  draws a shape
+            ctx.rect(basketX, canvas.height - basketHeight, basketWidth, basketHeight); // Draws a rectangle for the basket
+            ctx.fillStyle = '#000000'; // basket to black
+            ctx.fill(); // fill the rectangle - black
+            ctx.closePath(); // finish drawing the shape
+        }
+
+        //  function draws the ball on the canvas
+        function drawBall() {
+            ctx.beginPath(); // start to draws a shape
+            ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2); // draw a circle for the ball
+            ctx.fillStyle = '#000000'; // set the color - black
+            ctx.fill(); // fill 
+            ctx.closePath(); // finish 
+        }
+
+        //  function moves the basket left or right based on the arrow keys
+        function moveBasket() {
+            if (rightPressed && basketX < canvas.width - basketWidth) {
+                basketX += 7; // move the basket to the right = if the right arrow is pressed
+            } else if (leftPressed && basketX > 0) {
+                basketX -= 7; // move the basket to the left = if the left arrow is pressed
+            }
+        }
+
+        //  function moves the ball down the screen
+        function moveBall() {
+            ballY += ballSpeed; // increase the ball's Y position to move it down - faster and faster
+
+            // check if the ball reaches the bottom of the canvas
+            if (ballY + ballRadius > canvas.height) {
+                // check if the ball is within the basket
+                if (ballX > basketX && ballX < basketX + basketWidth) {
+                    score++; // increase the score if  ball is caught
+                    document.getElementById('score').innerText = 'Score: ' + score; // update the score 
+                    resetBall(); // reset the ball to the top to continue the game
+                } else {
+                    gameOver = true; // end the game if the ball is missed
+                    document.getElementById('gameOver').style.display = 'block'; // show the "Game Over" message and  restart button
+                }
+            }
+        }
+
+        //  function resets the ball to the top with a random position and increases the speed 
+        function resetBall() {
+            ballX = Math.random() * (canvas.width - 2 * ballRadius) + ballRadius; // Set a new random X position for the ball
+            ballY = ballRadius; // reset the Y position to the top of the canvas
+            ballSpeed += 0.5; // increase the ball speed to make the game harder as it progresses
+        }
+
+        // this function restarts the game
+        function restartGame() {
+            score = 0; // reset the score to 0
+            ballSpeed = 2; // reset the ball speed
+            gameOver = false; // set gameOver to false to restart the game
+            document.getElementById('score').innerText = 'Score: ' + score; // update the score display
+            document.getElementById('gameOver').style.display = 'none'; // hide the "Game Over" message and the restart button
+            resetBall(); // reset the ball to start the game again
+            draw(); // restart the game loop
+        }
+
+        //  the main function that runs the game
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // clear the canvas
+            drawBasket(); // draw the basket
+            drawBall(); // draw the ball
+            moveBasket(); // move the basket based on player input
+            if (!gameOver) {
+                moveBall(); // move the ball if the game isn't over
+                requestAnimationFrame(draw); // continue the game loop
+            }
+        }
+
+        draw(); // start the game by calling the draw function
+    </script>
+</body>
+</html>
